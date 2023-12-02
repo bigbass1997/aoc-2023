@@ -1,5 +1,4 @@
 use std::cmp::max;
-use std::collections::HashMap;
 use std::fmt::Display;
 
 const INPUT: &'static str = include_str!("input.txt");
@@ -7,20 +6,24 @@ const INPUT: &'static str = include_str!("input.txt");
 type Set<'a> = Vec<(usize, &'a str)>;
 type Game<'a> = Vec<Set<'a>>;
 
+const R: usize = 0;
+const G: usize = 1;
+const B: usize = 2;
+
 fn part1() -> impl Display {
     parse_maximums()
-        .filter(|(_, maximums)| !(*maximums.get("red").unwrap() > 12 || *maximums.get("green").unwrap() > 13 || *maximums.get("blue").unwrap() > 14))
+        .filter(|(_, maximums)| !(maximums[R] > 12 || maximums[G] > 13 || maximums[B] > 14))
         .map(|(id, _)| id)
         .sum::<usize>()
 }
 
 fn part2() -> impl Display {
     parse_maximums()
-        .map(|(_, maximums)| *maximums.get("red").unwrap() * *maximums.get("green").unwrap() * *maximums.get("blue").unwrap())
+        .map(|(_, maximums)| maximums[R] * maximums[G] * maximums[B])
         .sum::<usize>()
 }
 
-fn parse_maximums<'a>() -> impl Iterator<Item = (usize, HashMap<&'a str, usize>)> {
+fn parse_maximums() -> impl Iterator<Item = (usize, [usize; 3])> {
     INPUT.lines()
         .map(|line| {
             let (gamenum, record) = line.split_once(':').unwrap();
@@ -37,16 +40,17 @@ fn parse_maximums<'a>() -> impl Iterator<Item = (usize, HashMap<&'a str, usize>)
             (game_id, game)
         })
         .map(|(id, game)| {
-            let mut maximums = HashMap::new();
+            let mut maximums = [0; 3];
             
             for set in game {
                 for (num, color) in set {
-                    if !maximums.contains_key(color) {
-                        maximums.insert(color, num);
-                    } else {
-                        let prev = maximums.get_mut(color).unwrap();
-                        *prev = max(*prev, num);
-                    }
+                    let i = match color {
+                        "red" => R,
+                        "green" => G,
+                        "blue" => B,
+                        _ => unreachable!()
+                    };
+                    maximums[i] = max(maximums[i], num);
                 }
             }
 
