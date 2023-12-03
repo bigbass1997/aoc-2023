@@ -38,8 +38,6 @@ fn part2() -> impl Display {
             let first = line.chars().find(|c| c.is_numeric()).unwrap();
             let last = line.chars().rfind(|c| c.is_numeric()).unwrap();
             
-            println!("{line} | {first}{last}");
-            
             format!("{first}{last}").parse::<usize>().unwrap()
         })
         .sum::<usize>()
