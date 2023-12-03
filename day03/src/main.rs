@@ -113,38 +113,33 @@ impl Grid {
 fn part1() -> impl Display {
     let grid = Grid::new();
     
-    let mut sum = 0;
-    
-    for span in grid.spans {
-        sum += span.value;
-    }
-    
-    
-    sum
+    grid.spans.into_iter()
+        .map(|span| span.value)
+        .sum::<usize>()
 }
 
 fn part2() -> impl Display {
     let grid = Grid::new();
-    
-    let mut already_counted = HashSet::with_capacity(grid.spans.len());
     
     let mut sum = 0;
     for lhs_span in &grid.spans {
         for gear in lhs_span.symbols.iter().filter(|sym| sym.0 == '*') {
             for rhs_span in &grid.spans {
                 if lhs_span != rhs_span && rhs_span.symbols.iter().find(|sym| gear == *sym).is_some() {
-                    let lower = min(lhs_span.value, rhs_span.value);
-                    let higher = max(lhs_span.value, rhs_span.value);
-                    if !already_counted.contains(&(lower, higher)) {
-                        sum += lower * higher;
-                        already_counted.insert((lower, higher));
-                    }
+                    sum += lhs_span.value * rhs_span.value;
                 }
             }
         }
     }
     
-    sum
+    // All gear ratios were counted twice, so we only need half of the result.
+    // 
+    // Duplicates could be checked pre-emptively (check previous commit), but doing so can only be
+    //   attempted within the deepest part of the algorithm. Thus for this circumstance, checking
+    //   overcomplicates the code for no meaningful benefit.
+    // 
+    // (Profiling would be needed to know which is ultimately faster)
+    sum / 2
 }
 
 
