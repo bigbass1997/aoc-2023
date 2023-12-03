@@ -1,4 +1,3 @@
-use std::cmp::{max, min};
 use std::collections::HashSet;
 use std::fmt::Display;
 
@@ -9,8 +8,8 @@ const _SAMPLE: &'static str = include_str!("sample.txt");
 struct Span {
     bits: Vec<char>,
     value: usize,
-    pos: Vec<(usize, usize)>,
-    symbols: HashSet<(char, usize, usize)>,
+    pos: Vec<(isize, isize)>,
+    symbols: HashSet<(char, isize, isize)>,
 }
 impl PartialEq for Span {
     fn eq(&self, other: &Self) -> bool {
@@ -21,8 +20,8 @@ impl PartialEq for Span {
 #[derive(Debug, Default)]
 struct Grid {
     bits: Vec<Vec<char>>,
-    width: usize,
-    height: usize,
+    width: isize,
+    height: isize,
     /// spans touching at least one symbol
     spans: Vec<Span>,
 }
@@ -37,8 +36,8 @@ impl Grid {
             grid.bits.push(bits);
         }
         
-        grid.height = grid.bits.len();
-        grid.width = grid.bits[0].len();
+        grid.height = grid.bits.len() as isize;
+        grid.width = grid.bits[0].len() as isize;
         
         for y in 0..grid.height {
             let mut in_span = false;
@@ -61,11 +60,10 @@ impl Grid {
         grid
     }
     
-    pub fn detect_symbol(&self, x: usize, y: usize) -> Span {
-        let mut cx = x as isize;
-        let cy = y as isize;
-        let w = self.width as isize;
-        let h = self.height as isize;
+    /// Assumes (x, y) position is a number. So check for that before calling this function.
+    pub fn detect_symbol(&self, x: isize, y: isize) -> Span {
+        let mut cx = x;
+        let cy = y;
         
         let mut span = Span {
             bits: Vec::with_capacity(4),
@@ -76,19 +74,18 @@ impl Grid {
         loop {
             for y in (cy - 1)..=(cy + 1) {
                 for x in (cx - 1)..=(cx + 1) {
-                    if x >= 0 && x < w && y >= 0 && y < h {
-                        let bit = self.bit(x as usize, y as usize).unwrap();
+                    if let Some(bit) = self.bit(x, y) { // bound check
                         if x == cx && y == cy {
                             span.bits.push(bit);
-                            span.pos.push((x as usize, y as usize));
+                            span.pos.push((x, y));
                         } else if bit != '.' && !bit.is_ascii_digit() {
-                            span.symbols.insert((bit, x as usize, y as usize));
+                            span.symbols.insert((bit, x, y));
                         }
                     }
                 }
             }
             
-            let next = self.bit(cx as usize + 1, cy as usize);
+            let next = self.bit(cx + 1, cy);
             if next.is_none() || !next.unwrap().is_ascii_digit() {
                 break;
             }
@@ -101,9 +98,11 @@ impl Grid {
         span
     }
     
-    pub fn bit(&self, x: usize, y: usize) -> Option<char> {
-        if let Some(row) = self.bits.get(y) {
-            return row.get(x).copied();
+    pub fn bit(&self, x: isize, y: isize) -> Option<char> {
+        if x >= 0 && y >= 0 {
+            if let Some(row) = self.bits.get(y as usize) {
+                return row.get(x as usize).copied();
+            }
         }
         
         None
