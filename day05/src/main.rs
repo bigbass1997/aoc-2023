@@ -67,8 +67,8 @@ fn parse_maps() -> Vec<Map> {
 }
 
 fn part1() -> impl Display {
-    let seeds = parse_seeds();
     let maps = parse_maps();
+    let seeds = parse_seeds();
     
     let mut minimum = usize::MAX;
     for seed in seeds {
@@ -84,30 +84,18 @@ fn part1() -> impl Display {
 
 fn part2() -> impl Display {
     let maps = parse_maps();
-    
-    let total = parse_seeds()
-        .chunks_exact(2)
-        .map(|chunk| (chunk[0]..(chunk[0] + chunk[1])).len())
-        .sum::<usize>();
-    let mut processed = 0usize;
-    
     let mut minimum = usize::MAX;
+    
     parse_seeds()
         .chunks_exact(2)
         .map(|chunk| chunk[0]..(chunk[0] + chunk[1]))
-        .for_each(|range| {
-            let len = range.len();
-            range.for_each(|seed| {
-                let mut output = seed;
-                for map in &maps {
-                    output = map.convert(output);
-                }
-                minimum = min(output, minimum);
-            });
-            
-            processed += len;
-            println!("processed: {processed} of {total} ({:.2}%)", (processed as f64 / total as f64) * 100.0);
-        });
+        .for_each(|range| range.for_each(|seed| {
+            let mut output = seed;
+            for map in &maps {
+                output = map.convert(output);
+            }
+            minimum = min(output, minimum);
+        }));
     
     minimum
 }
